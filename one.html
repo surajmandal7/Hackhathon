@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Group Expense Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --bg-secondary: rgba(255, 255, 255, 0.95);
+            --bg-card: rgba(255, 255, 255, 0.95);
+            --bg-item: #f8f9fa;
+            --bg-item-hover: #e9ecef;
+            --text-primary: #333;
+            --text-secondary: #555;
+            --text-muted: #666;
+            --border-color: #e1e5e9;
+            --shadow-color: rgba(31, 38, 135, 0.37);
+            --navbar-bg: rgba(255, 255, 255, 0.95);
+            --navbar-text: #333;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+            --bg-secondary: rgba(26, 32, 44, 0.95);
+            --bg-card: rgba(45, 55, 72, 0.95);
+            --bg-item: #2d3748;
+            --bg-item-hover: #4a5568;
+            --text-primary: #e2e8f0;
+            --text-secondary: #cbd5e0;
+            --text-muted: #a0aec0;
+            --border-color: #4a5568;
+            --shadow-color: rgba(0, 0, 0, 0.5);
+            --navbar-bg: rgba(26, 32, 44, 0.95);
+            --navbar-text: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-primary);
+            min-height: 100vh;
+            padding: 0;
+            padding-top: 80px;
+            transition: all 0.3s ease;
+        }
+
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: var(--navbar-bg);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 15px 0;
+            z-index: 1000;
+            box-shadow: 0 2px 20px var(--shadow-color);
+            transition: all 0.3s ease;
+        }
+
+        .navbar-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .navbar-brand h1 {
+            font-size: 1.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 0;
+        }
+
+        .navbar-nav {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: var(--navbar-text);
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .nav-link:hover {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+        }
+
+        .nav-link.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: 2px solid var(--border-color);
+            color: var(--navbar-text);
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            margin-left: 15px;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(102, 126, 234, 0.1);
+            border-color: #667eea;
+        }
+
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            overflow: hidden;
+            border-right: 3px solid rgba(255, 255, 255, 0.7);
+            white-space: nowrap;
+            width: 0;
+            animation: typewriter 3s steps(40, end) forwards, blink 1s step-end infinite;
+        }
+
+        .header p {
+            opacity: 0;
+            animation: fadeInSubtext 0.8s ease-out 3.5s forwards;
+        }
+
+        @keyframes typewriter {
+            from {
+                width: 0;
+            }
+            to {
+                width: 100%;
+            }
+        }
+
+        @keyframes blink {
+            0%, 50% {
+                border-color: rgba(255, 255, 255, 0.7);
+            }
+            51%, 100% {
+                border-color: transparent;
+            }
+        }
+
+        @keyframes fadeInSubtext {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(31, 38, 135, 0.5);
+        }
+
+        .card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            background: var(--bg-item);
+            border-radius: 8px;
+            transition: background-color 0.3s ease;
+        }
+
+        .checkbox-item:hover {
+            background: var(--bg-item-hover);
+        }
+
+        .checkbox-item label {
+            color: var(--text-primary);
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: auto;
+            transform: scale(1.2);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+        }
+
+        .btn-danger:hover {
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+        }
+
+        .member-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .member-input input {
+            flex: 1;
+        }
+
+        .member-input button {
+            width: auto;
+            padding: 12px 15px;
+        }
+
+        .member-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .member-tag {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            animation: bounceIn 0.5s ease-out;
+            transition: all 0.3s ease;
+        }
+
+        .member-tag:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .remove-member {
+            background: rgba(255, 255, 255, 0.3);
+            border: none;
+            color: white;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .balance-item {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .balance-positive {
+            border-left-color: #28a745;
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        }
+
+        .balance-negative {
+            border-left-color: #dc3545;
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+        }
+
+        .expense-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .expense-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .expense-amount {
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .expense-date {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .settlements {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .settlement-item {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+                animation: typewriter 2.5s steps(30, end) forwards, blink 1s step-end infinite;
+            }
+            
+            .checkbox-group {
+                grid-template-columns: 1fr;
+            }
+
+            .mobile-menu-toggle {
+                display: block;
+            }
+
+            .navbar-nav {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: var(--navbar-bg);
+                backdrop-filter: blur(10px);
+                flex-direction: column;
+                padding: 20px;
+                box-shadow: 0 5px 20px var(--shadow-color);
+            }
+
+            .navbar-nav.active {
+                display: flex;
+            }
+
+            body {
+                padding-top: 70px;
+            }
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 20px;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            color: white;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="navbar-content">
+            <a href="#" class="navbar-brand">
+                <span>💰</span>
+                <h1>ExpenseShare</h1>
+            </a>
+            <div class="navbar-nav" id="navbarNav">
+                <a href="#" class="nav-link active" onclick="showSection('dashboard')">Dashboard</a>
+                <a href="#" class="nav-link" onclick="showSection('expenses')">Add Expense</a>
+                <a href="#" class="nav-link" onclick="showSection('members')">Members</a>
+                <a href="#" class="nav-link" onclick="showSection('history')">History</a>
+                <button class="theme-toggle" onclick="toggleTheme()" id="themeToggle">🌙</button>
+            </div>
+            <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="header">
+            <h1>💰 Group Expense Tracker</h1>
+            <p>Split bills, track expenses, and settle up with ease</p>
+        </div>
+
+        <!-- Manage Group Members Section - Full Width -->
+        <div class="card" style="margin-bottom: 30px;">
+            <h2>👥 Manage Group Members</h2>
+            <div class="member-input">
+                <input type="text" id="memberName" placeholder="Enter member name">
+                <button class="btn" onclick="addMember()">Add</button>
+            </div>
+            <div class="member-list" id="memberList"></div>
+        </div>
+
+        <!-- Add Expense Section - Full Width -->
+        <div class="card" style="margin-bottom: 30px;">
+            <h2>➕ Add New Expense</h2>
+            <form onsubmit="addExpense(event)">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="expenseAmount">Amount ($)</label>
+                        <input type="number" id="expenseAmount" step="0.01" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="expenseDescription">Description</label>
+                        <input type="text" id="expenseDescription" placeholder="What was this expense for?" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="expensePaidBy">Paid by</label>
+                        <select id="expensePaidBy" required>
+                            <option value="">Select who paid</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Split between:</label>
+                    <div class="checkbox-group" id="splitBetween"></div>
+                </div>
+                <button type="submit" class="btn">Add Expense</button>
+            </form>
+        </div>
+
+        <!-- Dashboard Section -->
+        <div class="card">
+            <h2>📊 Dashboard</h2>
+            
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalExpenses">$0.00</div>
+                    <div class="stat-label">Total Expenses</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalMembers">0</div>
+                    <div class="stat-label">Group Members</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="avgPerPerson">$0.00</div>
+                    <div class="stat-label">Avg per Person</div>
+                </div>
+            </div>
+
+            <div class="dashboard-grid">
+                <!-- Balances -->
+                <div>
+                    <h3>💳 Individual Balances</h3>
+                    <div id="balances"></div>
+                </div>
+
+                <!-- Settlement Suggestions -->
+                <div>
+                    <h3>🔄 Who Owes What</h3>
+                    <div id="settlements"></div>
+                    <button class="btn btn-danger" onclick="settleUp()" style="margin-top: 15px;">
+                        Settle Up & Reset All
+                    </button>
+                </div>
+            </div>
+
+            <!-- Expense History -->
+            <div style="margin-top: 30px;">
+                <h3>🧾 Recent Expenses</h3>
+                <div id="expenseHistory"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data storage
+        let members = [];
+        let expenses = [];
+        let currentSection = 'dashboard';
+        let isDarkMode = false;
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check for saved theme preference
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                isDarkMode = savedTheme === 'dark';
+                applyTheme();
+            }
+            
+            updateMemberList();
+            updateDashboard();
+            showSection('dashboard');
+            
+            // Add enter key support for member input
+            document.getElementById('memberName').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    addMember();
+                }
+            });
+        });
+
+        // Theme functions
+        function toggleTheme() {
+            isDarkMode = !isDarkMode;
+            applyTheme();
+            localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+        }
+
+        function applyTheme() {
+            const body = document.body;
+            const themeToggle = document.getElementById('themeToggle');
+            
+            if (isDarkMode) {
+                body.setAttribute('data-theme', 'dark');
+                themeToggle.textContent = '☀️';
+                themeToggle.title = 'Switch to light mode';
+            } else {
+                body.removeAttribute('data-theme');
+                themeToggle.textContent = '🌙';
+                themeToggle.title = 'Switch to dark mode';
+            }
+        }
+
+        // Navigation functions
+        function showSection(section) {
+            currentSection = section;
+            
+            // Update active nav link
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Hide mobile menu
+            document.getElementById('navbarNav').classList.remove('active');
+            
+            // Show appropriate content (all sections are visible for now)
+            // In a more complex app, you might hide/show different sections
+            if (section === 'dashboard') {
+                updateDashboard();
+            }
+        }
+
+        function toggleMobileMenu() {
+            document.getElementById('navbarNav').classList.toggle('active');
+        }
+
+        // Member management
+        function addMember() {
+            const nameInput = document.getElementById('memberName');
+            const name = nameInput.value.trim();
+            
+            if (name && !members.includes(name)) {
+                members.push(name);
+                nameInput.value = '';
+                updateMemberList();
+                updateExpenseForm();
+                updateDashboard();
+            }
+        }
+
+        function removeMember(name) {
+            members = members.filter(member => member !== name);
+            // Remove expenses involving this member
+            expenses = expenses.filter(expense => 
+                expense.paidBy !== name && !expense.splitBetween.includes(name)
+            );
+            updateMemberList();
+            updateExpenseForm();
+            updateDashboard();
+        }
+
+        function updateMemberList() {
+            const memberList = document.getElementById('memberList');
+            memberList.innerHTML = members.map(member => `
+                <div class="member-tag">
+                    ${member}
+                    <button class="remove-member" onclick="removeMember('${member}')">×</button>
+                </div>
+            `).join('');
+        }
+
+        // Expense form management
+        function updateExpenseForm() {
+            const paidBySelect = document.getElementById('expensePaidBy');
+            const splitBetweenDiv = document.getElementById('splitBetween');
+
+            // Update paid by dropdown
+            paidBySelect.innerHTML = '<option value="">Select who paid</option>' + 
+                members.map(member => `<option value="${member}">${member}</option>`).join('');
+
+            // Update split between checkboxes
+            splitBetweenDiv.innerHTML = members.map(member => `
+                <div class="checkbox-item">
+                    <input type="checkbox" id="split_${member}" value="${member}" checked>
+                    <label for="split_${member}">${member}</label>
+                </div>
+            `).join('');
+        }
+
+        // Add expense
+        function addExpense(event) {
+            event.preventDefault();
+            
+            const amount = parseFloat(document.getElementById('expenseAmount').value);
+            const description = document.getElementById('expenseDescription').value;
+            const paidBy = document.getElementById('expensePaidBy').value;
+            const splitBetween = Array.from(document.querySelectorAll('#splitBetween input:checked'))
+                                      .map(cb => cb.value);
+
+            if (!paidBy || splitBetween.length === 0) {
+                alert('Please select who paid and who to split between');
+                return;
+            }
+
+            const expense = {
+                id: Date.now(),
+                amount: amount,
+                description: description,
+                paidBy: paidBy,
+                splitBetween: splitBetween,
+                date: new Date().toLocaleDateString(),
+                perPerson: amount / splitBetween.length
+            };
+
+            expenses.unshift(expense); // Add to beginning for recent first
+            
+            // Reset form
+            document.getElementById('expenseAmount').value = '';
+            document.getElementById('expenseDescription').value = '';
+            document.getElementById('expensePaidBy').value = '';
+            updateExpenseForm(); // This will reset checkboxes
+            
+            updateDashboard();
+        }
+
+        // Dashboard calculations
+        function calculateBalances() {
+            const balances = {};
+            
+            // Initialize all members with 0 balance
+            members.forEach(member => {
+                balances[member] = 0;
+            });
+
+            // Process each expense
+            expenses.forEach(expense => {
+                // Person who paid gets credited
+                balances[expense.paidBy] += expense.amount;
+                
+                // Everyone in the split gets debited their share
+                expense.splitBetween.forEach(member => {
+                    balances[member] -= expense.perPerson;
+                });
+            });
+
+            return balances;
+        }
+
+        function calculateSettlements() {
+            const balances = calculateBalances();
+            const settlements = [];
+            
+            // Get creditors (people owed money) and debtors (people who owe money)
+            const creditors = Object.entries(balances).filter(([_, balance]) => balance > 0.01);
+            const debtors = Object.entries(balances).filter(([_, balance]) => balance < -0.01);
+            
+            // Sort by amount
+            creditors.sort((a, b) => b[1] - a[1]);
+            debtors.sort((a, b) => a[1] - b[1]);
+            
+            let i = 0, j = 0;
+            while (i < creditors.length && j < debtors.length) {
+                const [creditor, creditAmount] = creditors[i];
+                const [debtor, debtAmount] = debtors[j];
+                
+                const settlementAmount = Math.min(creditAmount, Math.abs(debtAmount));
+                
+                settlements.push({
+                    from: debtor,
+                    to: creditor,
+                    amount: settlementAmount
+                });
+                
+                creditors[i][1] -= settlementAmount;
+                debtors[j][1] += settlementAmount;
+                
+                if (creditors[i][1] < 0.01) i++;
+                if (Math.abs(debtors[j][1]) < 0.01) j++;
+            }
+            
+            return settlements;
+        }
+
+        function updateDashboard() {
+            updateStats();
+            updateBalances();
+            updateSettlements();
+            updateExpenseHistory();
+        }
+
+        function updateStats() {
+            const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+            const totalMembers = members.length;
+            const avgPerPerson = totalMembers > 0 ? totalExpenses / totalMembers : 0;
+            
+            document.getElementById('totalExpenses').textContent = `$${totalExpenses.toFixed(2)}`;
+            document.getElementById('totalMembers').textContent = totalMembers;
+            document.getElementById('avgPerPerson').textContent = `$${avgPerPerson.toFixed(2)}`;
+        }
+
+        function updateBalances() {
+            const balances = calculateBalances();
+            const balancesDiv = document.getElementById('balances');
+            
+            if (members.length === 0) {
+                balancesDiv.innerHTML = '<div class="empty-state">Add members to see balances</div>';
+                return;
+            }
+            
+            balancesDiv.innerHTML = Object.entries(balances).map(([member, balance]) => {
+                let className = 'balance-item';
+                let prefix = '';
+                
+                if (balance > 0.01) {
+                    className += ' balance-positive';
+                    prefix = 'Gets back ';
+                } else if (balance < -0.01) {
+                    className += ' balance-negative';
+                    prefix = 'Owes ';
+                } else {
+                    prefix = 'Settled up ';
+                }
+                
+                return `
+                    <div class="${className}">
+                        <strong>${member}</strong><br>
+                        <span>${prefix}$${Math.abs(balance).toFixed(2)}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateSettlements() {
+            const settlements = calculateSettlements();
+            const settlementsDiv = document.getElementById('settlements');
+            
+            if (settlements.length === 0) {
+                settlementsDiv.innerHTML = '<div class="empty-state">All settled up! 🎉</div>';
+                return;
+            }
+            
+            settlementsDiv.innerHTML = settlements.map(settlement => `
+                <div class="settlement-item">
+                    <strong>${settlement.from}</strong> owes <strong>${settlement.to}</strong> 
+                    <span class="settlement-amount">${settlement.amount.toFixed(2)}</span>
+                </div>
+            `).join('');
+        }
+
+        function updateExpenseHistory() {
+            const historyDiv = document.getElementById('expenseHistory');
+            
+            if (expenses.length === 0) {
+                historyDiv.innerHTML = '<div class="empty-state">No expenses yet</div>';
+                return;
+            }
+            
+            historyDiv.innerHTML = expenses.slice(0, 10).map(expense => `
+                <div class="expense-item">
+                    <div class="expense-header">
+                        <div>
+                            <strong>${expense.description}</strong>
+                            <div class="expense-date">${expense.date}</div>
+                        </div>
+                        <div class="expense-amount">$${expense.amount.toFixed(2)}</div>
+                    </div>
+                    <div style="font-size: 14px; color: #666;">
+                        Paid by <strong>${expense.paidBy}</strong> • 
+                        Split between ${expense.splitBetween.join(', ')} • 
+                        $${expense.perPerson.toFixed(2)} per person
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function settleUp() {
+            if (confirm('This will clear all expenses and reset balances. Are you sure?')) {
+                expenses = [];
+                updateDashboard();
+            }
+        }
+    </script>
+</body>
+</html>
